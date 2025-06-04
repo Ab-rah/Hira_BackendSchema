@@ -9,6 +9,9 @@ from models import Employee
 import requests
 import logging
 import os
+from functools import wraps
+from sklearn.metrics.pairwise import cosine_similarity
+from word2number import w2n
 import requests
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -46,6 +49,20 @@ class EnhancedHRRAGEngine:
         except json.JSONDecodeError:
             self.logger.error(f"Invalid JSON format in file: {data_path}")
             raise
+
+    def is_exact_experience_query(self,query:str,threshold=0.7) -> bool:
+        EXACT_EXPERIENCE_EXAMPLES = [
+            "developers with exactly 5 years of experience",
+            "only 5 years experience",
+            "5 years, not more not less",
+            "strictly 5 years of experience",
+            "employees who worked 5 years, no more",
+        ]
+
+        query_embedding = self.model.encode([query])[0]
+        examples_embedding = self.model.encode(EXACT_EXPERIENCE_EXAMPLES)
+        scores = cosine_similarity([query_embedding], examples_embedding)[0]
+        return max(scores) > threshold
 
     def _extract_all_skills(self) -> List[str]:
         """Extract all unique skills from the employee dataset."""
@@ -100,18 +117,34 @@ class EnhancedHRRAGEngine:
         ]
         return " | ".join(profile_parts)
 
+    def normalize_numbers_decorator(func):
+        def wrapper(self, query, *args, **kwargs):
+            words = query.lower().split()
+            normalized_words = []
+            for word in words:
+                try:
+                    # Try converting text like 'five' to '5'
+                    normalized_words.append(str(w2n.word_to_num(word)))
+                except:
+                    normalized_words.append(word)
+            normalized_query = ' '.join(normalized_words)
+            return func(self, normalized_query, *args, **kwargs)
+
+        return wrapper
+
+    @normalize_numbers_decorator
     def _extract_query_constraints(self, query: str) -> Dict:
         """Extract structured constraints from natural language query."""
         constraints = {
             'skills': [],
             'min_experience': 0,
             'projects': [],
-            'availability': None
+            'availability': None,
+            'exact_experience': None
         }
 
         query_lower = query.lower()
 
-        # Extract experience requirements
         experience_patterns = [
             r"(\d+)\+?\s*(year|years|yr|yrs)",
             r"(\d+)\s*to\s*(\d+)\s*(year|years|yr|yrs)",
@@ -201,17 +234,80 @@ class EnhancedHRRAGEngine:
                 matching_employees.append(Employee(**emp))
         return matching_employees
 
+    def hr_domain_guard(func):
+        @wraps(func)
+        def wrapper(self, query: str, *args, **kwargs):
+            try:
+                # HR-related keywords for fallback
+                HR_KEYWORDS = [
+                    'employee', 'employees', 'developer', 'developers', 'candidate', 'candidates',
+                    'staff', 'worker', 'talent', 'team', 'experience', 'skill', 'skills',
+                    'project', 'projects', 'available', 'availability', 'find', 'search',
+                    'show', 'list', 'who', 'which', 'healthcare', 'e-commerce', 'platform',
+                    'frontend', 'backend', 'python', 'java', 'react', 'aws', 'azure'
+                ]
+
+                # First check keyword matching
+                query_lower = query.lower()
+                keyword_match = any(keyword in query_lower for keyword in HR_KEYWORDS)
+
+                if keyword_match:
+                    self.logger.info(f"Query '{query}' matched HR keywords")
+                    return func(self, query, *args, **kwargs)
+
+                # If no keyword match, check semantic similarity
+                HR_DOMAIN_EXAMPLES = [
+                    # Skills-based queries
+                    "Find employees with Java skills",
+                    "Show me Python developers",
+                    "Who knows React and Node.js",
+                    "Developers with machine learning expertise",
+                    "Find candidates with cloud platform experience",
+
+                    # Experience-based queries
+                    "Give employee with exact 5 year experience",
+                    "List candidates with 3 years of experience",
+                    "Show me senior developers with 10+ years",
+
+                    # Project-based queries
+                    "I need employee who worked on healthcare projects",
+                    "Which candidates worked on e-commerce projects",
+                    "Show me developers with healthcare experience",
+                    "Find people who worked on platform projects",
+
+                    # Availability queries
+                    "Are there any frontend developers available",
+                    "Show me available Python developers",
+                    "List all available candidates",
+
+                    # Combined queries
+                    "Available Python developers with 5+ years experience",
+                    "Senior React developers who worked on healthcare",
+                    "Find available ML engineers with project experience"
+                ]
+
+                query_embedding = self.model.encode([query])[0]
+                domain_embeddings = self.model.encode(HR_DOMAIN_EXAMPLES)
+
+                similarities = cosine_similarity([query_embedding], domain_embeddings)[0]
+                max_similarity = max(similarities)
+
+                if max_similarity < 0.3:
+                    self.logger.warning(
+                        f"Query '{query}' failed both keyword and semantic matching (similarity: {max_similarity:.2f})")
+                    return "This assistant is designed for HR-related queries like employee skills, experience, project history, or availability. Please rephrase your question accordingly."
+
+                self.logger.info(f"Query '{query}' matched HR domain with similarity: {max_similarity:.2f}")
+                return func(self, query, *args, **kwargs)
+
+            except Exception as e:
+                self.logger.error(f"Error validating domain of query '{query}': {str(e)}")
+                return "Sorry, I encountered an error while validating your query. Please try again."
+
+        return wrapper
+
+    @hr_domain_guard
     def chat_query(self, query: str, top_k: int = 5) -> str:
-        """
-        Process natural language query and return formatted response.
-
-        Args:
-            query: Natural language query from user
-            top_k: Number of top candidates to consider
-
-        Returns:
-            Formatted response string
-        """
         try:
             # Extract constraints from query
             constraints = self._extract_query_constraints(query)
@@ -281,7 +377,6 @@ class EnhancedHRRAGEngine:
     #         self.logger.error(f"Error generating GPT response: {str(e)}")
             # return self._generate_response(query, candidates, constraints)  # fallback
 
-
     def _generate_response(self, query: str, candidates: List[Dict], constraints: Dict) -> str:
         """Generate natural language response based on search results."""
         if not candidates:
@@ -296,8 +391,8 @@ class EnhancedHRRAGEngine:
             f"I found {len(candidates)} candidate{'s' if len(candidates) > 1 else ''} for {skill_text}{exp_text}:\n"
         ]
 
-        # Add candidate details
-        for i, candidate in enumerate(candidates[:3], 1):  # Limit to top 3 for readability
+        # Display all candidate details
+        for i, candidate in enumerate(candidates, 1):  # No limiting here
             name = candidate.get('name', 'Unknown')
             skills = ', '.join(candidate.get('skills', []))
             experience = candidate.get('experience_years', 0)
@@ -315,14 +410,7 @@ class EnhancedHRRAGEngine:
             response_parts.extend(candidate_info)
             response_parts.append("")  # Empty line for spacing
 
-        if len(candidates) > 3:
-            response_parts.append(
-                f"... and {len(candidates) - 3} more candidate{'s' if len(candidates) - 3 > 1 else ''}.")
-
-        response_parts.append("Would you like more details about any of these candidates?")
-
         return "\n".join(response_parts)
-
 
 
     def _generate_gpt_response(self, query: str, candidates: List[Dict], constraints: Dict) -> str:

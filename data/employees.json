@@ -5,7 +5,7 @@
       "name": "Alice Johnson",
       "skills": ["Python", "React", "AWS", "PostgreSQL"],
       "experience_years": 5,
-      "projects": ["E-commerce Platform", "Healthcare Dashboard"],
+      "projects": ["E-commerce Platform", "Financial Analysis Tool"],
       "availability": "available"
     },
     {
@@ -13,7 +13,7 @@
       "name": "Michael Rodriguez",
       "skills": ["python", "AWS", "Machine Learning", "TensorFlow"],
       "experience_years": 4,
-      "projects": ["Patient Risk Prediction System", "Medical Diagnosis Platform"],
+      "projects": ["Social Media Analysis Tool", "Booking Platform"],
       "availability": "available"
     },
     {
@@ -29,7 +29,7 @@
       "name": "Abdhul Rahman",
       "skills": ["Python", "Next js", "Azure", "MongoDB"],
       "experience_years": 3,
-      "projects": ["E-commerce Platform", "Healthcare Dashboard"],
+      "projects": ["E-commerce Platform", "Trading Platform"],
       "availability": "available"
     }
   ]

@@ -6,7 +6,16 @@ from typing import List, Optional
 import uvicorn
 import logging
 from rag import EnhancedHRRAGEngine
-from models import Employee
+from models import (
+    Employee,
+    ChatRequest,
+    ChatResponse,
+    EmployeeStatsResponse,
+    EmployeeSearchRequest,
+    EmployeeResponse,
+    HealthCheckResponse,
+    StatsResponse,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -39,45 +48,6 @@ except Exception as e:
     rag_engine = None
 
 
-# Pydantic models for request/response validation
-class ChatRequest(BaseModel):
-    query: str = Field(..., min_length=1, max_length=500, description="Natural language query")
-
-
-class ChatResponse(BaseModel):
-    query: str
-    response: str
-    candidates_found: int
-
-
-class EmployeeSearchRequest(BaseModel):
-    skill: str = Field(..., min_length=1, description="Required skill")
-    min_experience: int = Field(0, ge=0, le=20, description="Minimum years of experience")
-
-
-class EmployeeResponse(BaseModel):
-    id: int
-    name: str
-    skills: List[str]
-    experience_years: int
-    projects: List[str]
-    availability: str
-
-
-class HealthCheckResponse(BaseModel):
-    status: str
-    message: str
-    engine_status: str
-
-
-class StatsResponse(BaseModel):
-    total_employees: int
-    average_experience: float
-    available_employees: int
-    total_skills: int
-    total_projects: int
-
-
 @app.get("/health", response_model=HealthCheckResponse)
 async def health_check():
     """Check API health and RAG engine status."""
@@ -88,6 +58,21 @@ async def health_check():
         engine_status=engine_status
     )
 
+@app.get("/total_available", response_model=EmployeeStatsResponse)
+async def get_total_available_employees():
+    try:
+        available_count = 0
+        for emp in rag_engine.data:
+            if emp.get('availability') == 'available':
+                available_count += 1
+
+        return EmployeeStatsResponse(
+            total_employees=len(rag_engine.data),
+            total_available = available_count
+        )
+    except Exception as e:
+        logger.error(f"Error processing chat query: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 # Main chat endpoint
 @app.post("/chat", response_model=ChatResponse)
@@ -107,7 +92,6 @@ async def chat_query(request: ChatRequest):
         # Process the query
         response = rag_engine.chat_query(request.query)
 
-        # Count candidates mentioned in response
         candidates_found = response.count("**") // 2  # Each candidate has name in **bold**
 
         return ChatResponse(
