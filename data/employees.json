@@ -1,0 +1,36 @@
+{
+  "employees": [
+    {
+      "id": 1,
+      "name": "Alice Johnson",
+      "skills": ["Python", "React", "AWS", "PostgreSQL"],
+      "experience_years": 5,
+      "projects": ["E-commerce Platform", "Healthcare Dashboard"],
+      "availability": "available"
+    },
+    {
+      "id": 2,
+      "name": "Michael Rodriguez",
+      "skills": ["python", "AWS", "Machine Learning", "TensorFlow"],
+      "experience_years": 4,
+      "projects": ["Patient Risk Prediction System", "Medical Diagnosis Platform"],
+      "availability": "available"
+    },
+    {
+      "id": 3,
+      "name": "Dr. Sarah Chen",
+      "skills": ["python", "PyTorch", "Computer Vision", "Medical Data"],
+      "experience_years": 6,
+      "projects": ["Medical Diagnosis Platform", "X-ray Analysis System"],
+      "availability": "available"
+    },
+    {
+      "id": 4,
+      "name": "Abdhul Rahman",
+      "skills": ["Python", "Next js", "Azure", "MongoDB"],
+      "experience_years": 3,
+      "projects": ["E-commerce Platform", "Healthcare Dashboard"],
+      "availability": "available"
+    }
+  ]
+}
