@@ -64,21 +64,23 @@ class EnhancedHRRAGEngine:
         return sorted(list(projects))
 
     def _build_index(self):
-        """Build FAISS index for semantic search."""
+        """Updated  FAISS index for semantic search using cosine similarity."""
         try:
             # Create rich text profiles for each employee
             profiles = [self._create_employee_profile(emp) for emp in self.data]
 
-            # Generate embeddings
-            embeddings = self.model.encode(profiles)
-            embeddings_array = np.array(embeddings).astype('float32')
+            # Generate embeddings and convert to float32
+            embeddings = self.model.encode(profiles, convert_to_numpy=True).astype('float32')
 
-            # Build FAISS index
+            # Normalize the embeddings (important for cosine similarity)
+            embeddings_array = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
+
+            # Build FAISS index using Inner Product (works as cosine similarity on normalized vectors)
             dim = embeddings_array.shape[1]
-            index = faiss.IndexFlatL2(dim)
+            index = faiss.IndexFlatIP(dim)
             index.add(embeddings_array)
 
-            self.logger.info(f"Built FAISS index with {len(self.data)} employees")
+            self.logger.info(f"Built FAISS index with {len(self.data)} employees using cosine similarity")
             return index, embeddings_array
 
         except Exception as e:
