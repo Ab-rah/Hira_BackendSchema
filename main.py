@@ -81,7 +81,7 @@ async def chat_query(request: ChatRequest):
     Process natural language queries to find employees.
 
     Examples:
-    - "Find Python developers with 3+ years experience"
+    - "Find Python developers with 7 years experience"
     - "Who has worked on healthcare projects?"
     - "Suggest people for a React Native project"
     """
@@ -210,6 +210,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=False,
+        reload=True,
         log_level="info"
     )

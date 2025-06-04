@@ -326,6 +326,7 @@ class EnhancedHRRAGEngine:
 
             # Generate response
             return self._generate_gpt_response(query, filtered_candidates, constraints)
+            # return self._generate_response(query, candidates, constraints)  # fallback
 
         except Exception as e:
             self.logger.error(f"Error processing query '{query}': {str(e)}")
