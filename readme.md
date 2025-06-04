@@ -1,4 +1,4 @@
-# HIRA Chatbot API
+# HIRA Chatbot
 
 An intelligent HR assistant that uses Retrieval-Augmented Generation (RAG) to find employees using natural language queries. The system combines semantic search with structured filtering to provide accurate employee recommendations.
 
