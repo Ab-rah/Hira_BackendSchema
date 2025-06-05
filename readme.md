@@ -408,8 +408,8 @@ curl http://localhost:8000/health
 
 With my expertise in Python automation, I will expand the ETL data pipeline to fetch and process resume and employee details from sources such as email, Naukri portal, LinkedIn, and internal systems. This will enable the storage of rich, structured employee data in the database. Additionally, I will implement a dynamic query search system to improve how project requirements are matched with employee skills.
 
-### a) Dynamic Project Matching and Search  
-Enhance the current matching system using advanced NLP to interpret project descriptions and dynamically query employee profiles based on skills, experience, and availability.
+### a) Enhance respone time and Dynamic Project Matching and Search  
+Enhance the response time and  current matching system using advanced NLP to interpret project descriptions and dynamically query employee profiles based on skills, experience, and availability.
 
 ### b) Automated Resume Ingestion  
 Develop scripts to automatically extract data from resumes received via email (PDF/attachments). Parsed information will be stored and continuously updated in the employee database.
