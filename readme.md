@@ -304,6 +304,11 @@ Both have the technical depth and domain expertise you need. Would you like me t
 - **Free Tier Workarounds**: Local development with production-ready frontend
 
 
+**Current Development:**
+- You can find the UI deployed here ->>>     https://hira-ui-uyng.vercel.app/
+(Please note this will display Mock data not LLM Response from API)
+
+
 ## 🛡️ Edge Cases Handled
 
 ### 1. Query Domain Validation
