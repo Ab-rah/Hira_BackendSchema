@@ -224,58 +224,7 @@ Based on your requirements for ML expertise in healthcare, I found 2 excellent c
 Both have the technical depth and domain expertise you need. Would you like me to provide more details about their specific healthcare projects or check their availability for meetings?
 ```
 
-## 🤖 AI Development Process
 
-### AI Tools Used in Development
-
-**Claude AI (Primary) - 80% of Development**
-- Complete UI design and Next.js frontend development
-- Component architecture and responsive styling with Tailwind CSS
-- User experience optimization and interface design
-- API integration patterns and error handling
-- Documentation generation and README structure
-
-**GitHub Copilot - 15% of Development**
-- Code completion and boilerplate generation
-- Function implementations and minor debugging
-- Syntax error detection and correction
-- Repetitive code patterns and utilities
-
-**ChatGPT - 5% of Development**
-- Deep concept learning for RAG implementation
-- System architecture guidance and design patterns
-- Problem-solving for complex integration challenges
-- Deployment strategy and infrastructure planning
-
-### AI vs Manual Implementation Breakdown
-
-**AI-Assisted Components (70%)**
-- Frontend UI components and modern styling
-- API endpoint structure and Pydantic validation models
-- Basic CRUD operations and data handling logic
-- Documentation generation and formatting
-- Error boundary components and user feedback systems
-
-**Manual Implementation (30%)**
-- **Edge Case Handling**: Domain validation logic for HR query filtering
-- **Text Normalization**: Custom word-to-number conversion wrapper functions
-- **RAG Pipeline Optimization**: Fine-tuning semantic search thresholds and constraint extraction
-- **Custom Error Handling**: Fallback mechanisms and graceful degradation
-- **Performance Optimization**: FAISS indexing configuration and memory management
-
-### Interesting AI-Generated Solutions
-
-1. **Responsive Chat Interface**: Claude generated a modern chat UI with real-time message streaming effects
-2. **API Integration Patterns**: Automated frontend-backend connection with proper error handling
-3. **Component Architecture**: Modular design separating chat interface from advanced search functionality
-4. **Styling System**: Consistent Tailwind CSS utility classes for professional appearance
-
-### Manual Problem-Solving Areas
-
-1. **Domain Validation Logic**:  handled nuanced HR query validation when user query is irrelevant - required custom semantic similarity thresholds
-2. **Text-to-Number Processing**: Manual implementation of decorator pattern for "five years" → "5 years" conversion
-3. **RAG Pipeline Tuning**: Hand-crafted similarity thresholds and embedding model selection
-4. **Deployment Architecture**: Custom solutions for AWS resource constraints and free tier limitations
 
 ## 🎯 Technical Decisions
 
