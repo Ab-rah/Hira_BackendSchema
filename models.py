@@ -53,3 +53,14 @@ class StatsResponse(BaseModel):
     available_employees: int
     total_skills: int
     total_projects: int
+
+class CreateUser(BaseModel):
+    username: str
+    full_name: str
+    password: str
+    disabled: bool = False
+
+
+class UserToken(BaseModel):
+    username: str
+    password: str

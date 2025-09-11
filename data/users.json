@@ -1,0 +1,34 @@
+{
+  "users": {
+    "Abraham": {
+      "username": "Abraham",
+      "full_name": "Abraham Smith",
+      "hashed_password": "$2b$12$KdJHLmqX1jjQyRa4aMVP9OsyKQa7Y3uN8Ihp84e5U0azQrY9Uo0tK",
+      "disabled": false
+    },
+    "Abdhul": {
+      "username": "Abdhul",
+      "full_name": "Abdhul Johnson",
+      "hashed_password": "$2b$12$e9Ro0uF2qPczvHsxYVXvuOX8G8q93YZRH1xy98ErP2O0D62D6Jz7C",
+      "disabled": false
+    },
+    "Carol": {
+      "username": "Afreen",
+      "full_name": "Afreen White",
+      "hashed_password": "$2b$12$J1eQw8bCmOzR8aQzKdQX4e8tI7vHUx9fH36Qi7/LnQZaYJ1U55v7a",
+      "disabled": true
+    },
+    "Rahim": {
+      "username": "Rahim",
+      "full_name": "Abdhul Rahim Sheikh",
+      "hashed_password": "$2b$12$UneDMAjXsezduVtGxKtw4eHQfat5XMFm7Fm/G8fg6hZhN.mrp5mz2",
+      "disabled": false
+    },
+    "Afreen": {
+      "username": "Afreen",
+      "full_name": "AfreenZakir",
+      "hashed_password": "$2b$12$b2Mv4HB9N69xpDKNwE8lN.m2sxqcxG/zprx25F5gdQsHhGv76XEyy",
+      "disabled": false
+    }
+  }
+}

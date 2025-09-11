@@ -1,10 +1,16 @@
+import json
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from fastapi import Depends, status
 import uvicorn
 import logging
+from fastapi.security import OAuth2PasswordRequestForm
+from JWT import users
+from fastapi.openapi.utils import get_openapi
+from JWT import authenticate_user, create_access_token, get_password_hash,get_current_active_user
 from rag import EnhancedHRRAGEngine
 from models import (
     Employee,
@@ -15,6 +21,8 @@ from models import (
     EmployeeResponse,
     HealthCheckResponse,
     StatsResponse,
+    CreateUser,
+    UserToken
 )
 
 # Configure logging
@@ -29,6 +37,34 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="HR Resource Query Chatbot API",
+        version="1.0.0",
+        description="An intelligent HR assistant for finding employees using natural language queries",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",   # tells Swagger this is a JWT
+            "description": "Enter JWT Bearer token here. Example: Bearer <your_token>"
+        }
+    }
+    # Apply BearerAuth globally (so all endpoints require it unless overridden)
+    for path in openapi_schema["paths"].values():
+        for method in path.values():
+            method.setdefault("security", [{"BearerAuth": []}])
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
 
 # Add CORS middleware
 app.add_middleware(
@@ -74,9 +110,62 @@ async def get_total_available_employees():
         logger.error(f"Error processing chat query: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@app.post("/register")
+def register_user(new_user: CreateUser):
+    # check if user already exists
+    if new_user.username in users:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered"
+        )
+
+    # hash the password
+    hashed_pw = get_password_hash(new_user.password)
+
+    # prepare user record
+    user_record = {
+        "username": new_user.username,
+        "full_name": new_user.full_name,
+        "hashed_password": hashed_pw,
+        "disabled": new_user.disabled
+    }
+
+    # update in-memory users
+    users[new_user.username] = user_record
+
+    # update JSON file
+    with open(r"C:\Users\AbdhulRahimSheikh.M\PycharmProjects\Hira_BackendSchema\data\users.json", "r+") as f:
+        data = json.load(f)
+        data["users"][new_user.username] = user_record
+        f.seek(0)
+        json.dump(data, f, indent=2)
+        f.truncate()
+
+    return {"msg": f"User {new_user.username} registered successfully"}
+
+@app.middleware("http")
+async def log_requests(request, call_next):
+    print("AUTH HEADER:", request.headers.get("authorization"))
+    return await call_next(request)
+
+
+
+@app.post("/token")
+async def login_for_access_token(form_data: UserToken = Depends()):
+    user = authenticate_user(users, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user["username"]})
+    return {"access_token": access_token, "token_type": "bearer"}
+
 # Main chat endpoint
-@app.post("/chat", response_model=ChatResponse)
-async def chat_query(request: ChatRequest):
+@app.post("/chat", response_model=ChatResponse,
+          dependencies=[Depends(get_current_active_user)])
+async def chat_query(request: ChatRequest, current_user=Depends(get_current_active_user)):
     """
     Process natural language queries to find employees.
 
